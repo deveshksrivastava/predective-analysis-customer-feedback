@@ -1,0 +1,223 @@
+# Project Setup & Plan — Intelligent Customer Feedback & Predictive Analytics
+
+> Living document. We update this as we discuss and make decisions.
+> **Rule: No coding until the user explicitly says "go" for a step.**
+
+_Last updated: 2026-07-06_
+
+---
+
+## 1. Vision (long term)
+
+An enterprise AI platform combining **Generative AI, Agentic AI, and Machine Learning**
+to analyse customer feedback, classify sentiment, detect product issues, and predict &
+recommend resolutions.
+
+**Eventual tech stack (aspirational, NOT for the prototype):** Azure AI Foundry, Azure
+OpenAI, LangGraph, LangChain, Databricks, MLflow, Scikit-learn, XGBoost, Azure AI Search,
+FastAPI, React, Power BI.
+
+## 2. What we are building RIGHT NOW
+
+Start **small and simple**. Build **only the Machine Learning part** as an easy-to-understand
+**prototype**. Goal: learn how an ML project is structured and be able to try different models,
+compare their results, spot problems, and fix them.
+
+We build in **two phases, one at a time**:
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **Phase 1** | **Sentiment analysis** — classify feedback text as positive / negative / neutral | Planned (build first) |
+| **Phase 2** | **Predictive analysis** — predict customer churn | Planned (build after Phase 1) |
+
+```
+   For a production-ready Phase 1 pipeline, use this stack:
+
+   1. pandas – Load and clean review data.
+   2. scikit-learn – Split data, vectorize text (e.g., TF-IDF), train a baseline model like Logistic Regression, and evaluate it.
+   3. matplotlib and seaborn – Visualize class distribution, confusion matrix, and performance metrics.
+   4. joblib – Save both the trained model and the preprocessing pipeline (such as the TF-IDF vectorizer) for consistent inference.
+   5. Jupyter – Prototype and experiment during development.
+   6. XGBoost – Try it as a stronger baseline if your features are tabular or engineered; for raw text sentiment, traditional TF-IDF + Logistic Regression or modern transformer models are often more suitable than XGBoost alone.
+
+```
+
+
+```
+Chart
+
+Purpose
+
+Code
+
+1. Bar Chart
+
+Compare category counts
+
+sns.countplot(data=df, x="sentiment")
+
+2. Histogram
+
+Show distribution of numeric values
+
+sns.histplot(data=df, x="age")
+
+3. Box Plot
+
+Detect outliers and spread
+
+sns.boxplot(data=df, y="salary")
+
+4. Scatter Plot
+
+Show relationship between two variables
+
+sns.scatterplot(data=df, x="age", y="salary")
+
+5. Line Chart
+
+Show trends over time
+
+plt.plot(df["date"], df["sales"])
+
+Links:
+
+https://chatgpt.com/g/g-p-6a4c1339dbe4819184750211fe44f89e
+
+Both are in scope. We do **not** build them at the same time. Phase 2 starts only after
+Phase 1 works and is understood.
+
+Phase 1 — Sentiment Analysis
+Supervised (classification)
+
+You're mapping feedback text → one of three known labels (positive / negative / neutral). To train this, you need feedback examples that are already labeled with the correct sentiment. The model learns the mapping from labeled data. That's the definition of supervised learning — specifically multi-class classification.
+
+Phase 2 — Churn Prediction
+Supervised (classification)
+
+You're predicting a known target: will this customer churn or not (churn = yes/no). You train on historical customers where you already know the outcome (who actually churned). Again, labeled target → supervised, and it's binary classification.
+
+So where does unsupervised fit?
+Neither phase is unsupervised as written. Unsupervised learning has no labeled target — the model finds structure on its own. It would show up if you reframed a task like:
+
+Task	Type
+Classify sentiment into predefined pos/neg/neutral	Supervised
+Discover natural topics/themes in feedback without predefining them (topic modeling, clustering)	Unsupervised
+Predict churn (yes/no) from historical outcomes	Supervised
+Segment customers into behavioral groups without knowing labels first	Unsupervised
+```
+
+## 3. Working agreement
+
+- Proceed **step by step**. I explain, you approve, then we do that step.
+- **Do not start coding until the user says so.**
+- Keep everything **simple and readable** — this is a learning prototype.
+- Keep this `PROJECT_SETUP.md` updated with decisions as we go.
+
+---
+
+## 4. Phase 1 — Sentiment Analysis (build first)
+
+### 4.1 Goal
+Given a piece of customer feedback (free text) → predict its **sentiment**:
+`positive`, `negative`, or `neutral`.
+The core value: an easy pipeline where we can **plug in different models, compare their
+scores, see where they fail, and improve**.
+
+### 4.2 Data
+- A small sample **CSV**: `feedback_sample.csv`
+- Columns:
+  - `text` — the customer feedback sentence
+  - `sentiment` — the label (`positive` / `negative` / `neutral`)
+- Start with ~50–150 rows to learn the flow; swap in a larger/real dataset later.
+
+### 4.3 The ML pipeline (step by step)
+1. **Load** the CSV with pandas.
+2. **Explore** — row count, class balance, look at sample rows.
+3. **Clean text** — lowercase, remove punctuation, (optional) remove stopwords.
+4. **Vectorize** — convert text to numbers with **TF-IDF**.
+5. **Split** — train set vs test set (e.g. 80/20).
+6. **Train several models** and keep the interface identical so they're swappable:
+   - Logistic Regression
+   - Multinomial Naive Bayes
+   - **Linear SVC (Support Vector Classifier)**
+   - Random Forest
+   - _(optional)_ XGBoost
+7. **Evaluate** each model — accuracy, precision, recall, F1, confusion matrix.
+8. **Compare** — one results table, all models ranked.
+9. **Diagnose & fix** — use confusion matrix to see failure cases; address class
+   imbalance, add data, adjust preprocessing.
+10. **Tune** — hyperparameter tuning on the best model.
+11. **Save & predict** — save the winning model (joblib) and run it on new feedback.
+
+### 4.4 Tech stack (minimal, for the prototype only)
+- **Python 3**
+- **pandas** — data loading/exploration
+- **scikit-learn** — vectorizer, models, metrics
+- **matplotlib / seaborn** — simple charts (confusion matrix)
+- **joblib** — save/load model
+- **Jupyter notebook** — run and see each step
+- _(optional)_ **xgboost**
+
+### 4.5 How we build it — recommended approach
+**Notebook-first.** Start in a single Jupyter notebook so every step's output is visible
+while learning, then later refactor the good parts into reusable `.py` files.
+
+_Alternatives considered:_
+- Straight to `.py` scripts — cleaner, but less visual for learning. (Do this later.)
+- Streamlit demo app — nice UI, but premature for a first prototype.
+
+### 4.6 Proposed project structure
+```
+predective-analysis-customer-feedback/
+├── data/
+│   └── feedback_sample.csv        # sample dataset
+├── notebooks/
+│   └── 01_sentiment_prototype.ipynb
+├── src/                           # (later) refactored reusable code
+├── requirements.txt
+├── README.md
+└── PROJECT_SETUP.md               # this file
+```
+
+### 4.7 How we compare models & fix problems
+- A **metrics comparison table** (accuracy / precision / recall / F1 per model).
+- **Confusion matrix** per model to see exactly which classes get confused.
+- Improvement levers: more/better data, fix class imbalance, tweak text cleaning,
+  tune TF-IDF settings, tune model hyperparameters.
+
+### 4.8 Phase 1 "done" criteria
+- Pipeline runs end to end on the sample CSV.
+- At least 3 models trained and compared in one table.
+- We can explain why the best model wins and predict on a new sentence.
+
+---
+
+## 5. Phase 2 — Predictive Analysis / Churn (build later)
+
+_Only start after Phase 1 is complete and understood._
+
+- **Goal:** predict whether a customer is likely to **churn**.
+- **Inputs:** structured customer data + signals derived from Phase 1 (e.g. sentiment).
+- **Likely models:** Logistic Regression, Random Forest, XGBoost.
+- **Same discipline:** train several models, compare, diagnose, tune.
+- Details to be brainstormed when we get there.
+
+---
+
+## 6. Open questions / decisions log
+
+| Date | Decision / Question | Outcome |
+|------|--------------------|---------|
+| 2026-07-06 | "svc file" meaning | Meant a sample **CSV** dataset |
+| 2026-07-06 | Scope order | **Sentiment first**, then predictive/churn |
+| 2026-07-06 | Build style | **Confirmed: Notebook-first** |
+| 2026-07-06 | Number of sentiment classes | **Confirmed: 3 classes** (positive / negative / neutral) |
+| 2026-07-06 | Step 1 (dataset) | **Done** — `data/feedback_sample.csv` created (90 rows, balanced) |
+
+---
+
+## 7. Next step
+
+Review this plan. When you're happy, say **"go"** and we'll start with **Step 1 of Phase 1**:
+creating the sample `feedback_sample.csv` dataset. Nothing gets coded before then.

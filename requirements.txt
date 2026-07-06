@@ -1,0 +1,10 @@
+# Core prototype dependencies (Phase 1 — Sentiment Analysis)
+pandas
+scikit-learn
+matplotlib
+seaborn
+joblib
+jupyter
+
+# Optional extra model
+xgboost
