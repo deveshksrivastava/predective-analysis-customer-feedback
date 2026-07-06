@@ -221,3 +221,53 @@ _Only start after Phase 1 is complete and understood._
 
 Review this plan. When you're happy, say **"go"** and we'll start with **Step 1 of Phase 1**:
 creating the sample `feedback_sample.csv` dataset. Nothing gets coded before then.
+
+---
+
+## 8. Claude Code configuration (tooling setup)
+
+The repo is set up for Claude Code with project-level configuration so the assistant follows
+our working agreement and has helpful, repeatable tools. Files:
+
+```
+CLAUDE.md                     # project guidance loaded into every Claude Code session
+.claude/settings.json         # hooks (team-wide, committed)
+.claude/skills/eda-report/    # custom skill: /eda-report
+.claude/skills/add-model/     # custom skill: /add-model
+.mcp.json                     # MCP servers (filesystem, fetch)
+```
+
+### 8.1 CLAUDE.md
+Project guidance derived from this document: the two-phase scope, the **"don't code until the
+user says go"** rule, repo layout, the Phase 1 pipeline shape, env/commands, and conventions
+(notebook-relative paths, swappable-model interface). `PROJECT_SETUP.md` stays the
+authoritative source; `CLAUDE.md` is the short always-loaded summary.
+
+### 8.2 Skills (2)
+| Skill | Purpose |
+|-------|---------|
+| **`/eda-report`** | Exploratory data-analysis / data-quality summary of a feedback CSV — shape, class balance, text-length stats, duplicates, sample rows, and watch-outs. Describes only; never modifies data. |
+| **`/add-model`** | Add a new scikit-learn / XGBoost classifier to the Phase 1 comparison while keeping the shared TF-IDF features + train/test split so the comparison stays apples-to-apples. |
+
+### 8.3 Hooks (2) — in `.claude/settings.json`
+| Event | What it does |
+|-------|--------------|
+| **SessionStart** | Injects project context (Phase 1 sentiment, "don't code until go", points at `PROJECT_SETUP.md`) into every session. |
+| **PostToolUse** (`Write\|Edit`) | Runs `python -m py_compile` on any `.py` file that is written/edited and surfaces syntax errors immediately. Uses the project `.venv` python; non-Python files are skipped. |
+
+> Hooks in a newly created `.claude/` only become live after opening `/hooks` once (reloads
+> config) or restarting Claude Code.
+
+### 8.4 MCP servers (2) — in `.mcp.json`
+| Server | Command | Use |
+|--------|---------|-----|
+| **filesystem** | `npx -y @modelcontextprotocol/server-filesystem <project>` | Structured file access scoped to this repo. |
+| **fetch** | `uvx mcp-server-fetch` | Fetch web content (e.g. pulling datasets/docs). |
+
+> MCP servers prompt for approval on next start; manage them with `/mcp`. Both runtimes
+> (`npx`, `uvx`) are already installed.
+
+### 8.5 Decisions log addition
+| Date | Decision / Question | Outcome |
+|------|--------------------|---------|
+| 2026-07-06 | Claude Code tooling | Added `CLAUDE.md`, 2 skills (`/eda-report`, `/add-model`), 2 hooks (SessionStart context, Python syntax check), 2 MCP servers (filesystem, fetch) |
