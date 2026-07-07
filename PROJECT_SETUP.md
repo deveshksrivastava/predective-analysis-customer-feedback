@@ -224,6 +224,9 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-06 | Step 7–8 (evaluate + compare) | **Done** — ranked table + reports + confusion matrices. Scores poor (acc 39–48%); `positive` class collapsing (RF recall 0.00). Root cause: 2 mislabels + tiny data. **Fix in Step 9.** |
 | 2026-07-07 | Dataset size correction | CSV had been regenerated to **151 rows → 149 after cleaning** (positive 50 / neutral 50 / negative 49). Earlier "90 rows / 2 mislabels" notes are stale. |
 | 2026-07-07 | Step 9 (diagnose & fix) | **Done** — printed misclassified test rows + scanned whole CSV: **no genuine mislabels** (nothing to override; did not fabricate one). Real issue = tiny 38-row single split is high-variance. **Fix: added 5-fold cross-validation** → linear models ~0.72 macro-F1 (vs ~0.47–0.61 on the noisy split); NB/LogReg/LinearSVC lead, RF trails. Bigrams/keeping stopwords didn't help. Biggest lever = more data (esp. neutral). |
+| 2026-07-07 | Step 10 (tune) | **Done** — `GridSearchCV` (5-fold macro-F1) on Naive Bayes over TF-IDF + `alpha`. Best = unigram + English stopwords, `alpha=0.1` → CV macro-F1 ~**0.74** vs ~0.72 untuned (**+~0.02**, marginal). Tuned pipeline stored as `best_model`, refit on all data. Confirms data — not hyperparameters — is the bottleneck. |
+| 2026-07-07 | Step 11 (save & predict) | **Done** — saved tuned pipeline + label encoder to `models/sentiment_model.joblib` (joblib); reloaded from disk and predicted on 4 new sentences (all sensible, 79–97% confidence). `models/` **gitignored** as a regenerable artifact. **Phase 1 complete** — all "done" criteria met. |
+| 2026-07-07 | Phase 1 sign-off | **Awaiting user sign-off.** Phase 2 (churn) not to start without explicit go. Likely follow-ups: refactor notebook → `src/*.py`; gather more/better data (esp. neutral). |
 
 ---
 
