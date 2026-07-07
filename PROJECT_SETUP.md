@@ -214,6 +214,16 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-06 | Build style | **Confirmed: Notebook-first** |
 | 2026-07-06 | Number of sentiment classes | **Confirmed: 3 classes** (positive / negative / neutral) |
 | 2026-07-06 | Step 1 (dataset) | **Done** — `data/feedback_sample.csv` created (90 rows, balanced) |
+| 2026-07-06 | Environment | Python 3.13 venv (`.venv`) + Jupyter kernel `feedback-prototype`; deps installed |
+| 2026-07-06 | Step 2 (load & explore) | **Done** — notebook `notebooks/01_sentiment_prototype.ipynb` runs clean |
+| 2026-07-06 | Data-quality issues found | 1 missing label, 1 duplicate row, ~2 suspected mislabels; now 32/30/28. **To fix in Step 3.** |
+| 2026-07-06 | Step 3 (clean data & text) | **Done** — dropped missing-label + duplicate (91→89 rows); added `clean_text`. Mislabels left for confusion-matrix diagnosis. |
+| 2026-07-06 | Step 4 (TF-IDF + labels) | **Done** — labels encoded (neg/neu/pos → 0/1/2); demo TF-IDF 89×313 with `stop_words="english"`. Real TF-IDF fits on train split via Pipeline (Step 6). |
+| 2026-07-06 | Step 5 (train/test split) | **Done** — stratified 75/25, `random_state=42` → 66 train / 23 test. |
+| 2026-07-06 | Step 6 (train models) | **Done** — 4 Pipelines (TF-IDF→clf) in a `models` dict: LogReg, NaiveBayes, LinearSVC, RandomForest. All trained. |
+| 2026-07-06 | Step 7–8 (evaluate + compare) | **Done** — ranked table + reports + confusion matrices. Scores poor (acc 39–48%); `positive` class collapsing (RF recall 0.00). Root cause: 2 mislabels + tiny data. **Fix in Step 9.** |
+| 2026-07-07 | Dataset size correction | CSV had been regenerated to **151 rows → 149 after cleaning** (positive 50 / neutral 50 / negative 49). Earlier "90 rows / 2 mislabels" notes are stale. |
+| 2026-07-07 | Step 9 (diagnose & fix) | **Done** — printed misclassified test rows + scanned whole CSV: **no genuine mislabels** (nothing to override; did not fabricate one). Real issue = tiny 38-row single split is high-variance. **Fix: added 5-fold cross-validation** → linear models ~0.72 macro-F1 (vs ~0.47–0.61 on the noisy split); NB/LogReg/LinearSVC lead, RF trails. Bigrams/keeping stopwords didn't help. Biggest lever = more data (esp. neutral). |
 
 ---
 

@@ -7,12 +7,11 @@ text,sentiment
 "I am thrilled with the quality, worth every penny.",positive
 "Support went above and beyond to help me, very impressed.",positive
 "Setup was effortless and it worked right out of the box.",positive
-"Great value for money, I will definitely buy again.",
-"The new update made the software so much faster, love it.",positive
+"Great value for money, I will definitely buy again.",positive
 "The new update made the software so much faster, love it.",positive
 "Amazing experience from start to finish, thank you!",positive
-"Their team is friendly, knowledgeable, and quick to respond.",negative
-"The design is beautiful and the build feels premium.",negative
+"Their team is friendly, knowledgeable, and quick to respond.",positive
+"The design is beautiful and the build feels premium.",positive
 "Exceeded all my expectations, five stars without a doubt.",positive
 "So happy with this, it solved a problem I have had for years.",positive
 "Checkout was seamless and my order shipped the same day.",positive
@@ -30,6 +29,26 @@ text,sentiment
 "Reliable, well built, and does exactly what it promises.",positive
 "Impressed by how responsive and helpful the chat support was.",positive
 "Loving the new features, they make a huge difference.",positive
+"Outstanding value, I could not be happier with my choice.",positive
+"The onboarding was smooth and the tutorials were superb.",positive
+"This gadget is a game changer, I use it every single day.",positive
+"Prompt delivery and the product quality is fantastic.",positive
+"Absolutely delighted, it works perfectly and looks great.",positive
+"The customer team fixed my issue instantly, brilliant service.",positive
+"Super comfortable, well designed, and worth every cent.",positive
+"I upgraded and the performance boost is phenomenal.",positive
+"Easy to set up and the results are better than advertised.",positive
+"A pleasure to deal with, they really value their customers.",positive
+"The build quality is superb and it feels rock solid.",positive
+"Great app, it saves me hours of work every week.",positive
+"Five stars, the whole experience was smooth and pleasant.",positive
+"My favourite purchase this year, highly satisfied.",positive
+"The support agent was kind, patient, and extremely helpful.",positive
+"Works flawlessly and the design is genuinely elegant.",positive
+"Incredible attention to detail, you can tell they care.",positive
+"So intuitive that I was up and running in five minutes.",positive
+"Excellent product and even better after sales support.",positive
+"Highly reliable, it has never let me down once.",positive
 "The product broke after just two days of use, very disappointing.",negative
 "Terrible customer service, nobody responded to my emails.",negative
 "Delivery was delayed by two weeks and no one informed me.",negative
@@ -60,6 +79,25 @@ text,sentiment
 "Absolutely awful, I want my money back immediately.",negative
 "The subscription auto-renewed without warning, very shady.",negative
 "Disappointed with the performance, it lags constantly.",negative
+"The app drains my battery and heats up the phone badly.",negative
+"They lost my parcel and blamed me for the mistake.",negative
+"Endless hold times and the agent could not help at all.",negative
+"The seams came apart the first time I used it, shoddy work.",negative
+"Misleading description, the real product is far worse.",negative
+"It freezes constantly and customer care just hangs up.",negative
+"Worst purchase ever, it failed within the return window.",negative
+"They keep charging me after I cancelled, absolute scam.",negative
+"The screen cracked on its own, clearly a defective unit.",negative
+"Awful experience, slow, buggy, and no one takes responsibility.",negative
+"Cheap plastic that snapped immediately, total garbage.",negative
+"The refund was denied for no reason, deeply unfair.",negative
+"Painfully slow app and the updates only make it worse.",negative
+"Rude staff, broken product, and a refund they never sent.",negative
+"It arrived broken and the replacement was broken too.",negative
+"Completely unreliable, it crashes during every important task.",negative
+"The warranty is worthless, they refuse every single claim.",negative
+"Terrible build, it started falling apart within a week.",negative
+"Overhyped and underwhelming, I would never buy again.",negative
 "The product arrived on the scheduled delivery date.",neutral
 "It works as described, nothing more and nothing less.",neutral
 "I received an email confirming my order was placed.",neutral
@@ -90,3 +128,25 @@ text,sentiment
 "The return window is thirty days from the delivery date.",neutral
 "It is a typical model with the expected features.",neutral
 "The confirmation number was sent to my email address.",neutral
+"The item ships from a warehouse in another state.",neutral
+"There are three color options listed on the product page.",neutral
+"The invoice was attached to the order confirmation email.",neutral
+"It uses a standard USB cable for charging.",neutral
+"The settings can be changed from the main menu.",neutral
+"My subscription renews on the first of each month.",neutral
+"The package weight is listed as two kilograms.",neutral
+"I selected standard shipping at the checkout page.",neutral
+"The device supports both light and dark themes.",neutral
+"The order was placed and a receipt was generated.",neutral
+"It comes in small, medium, and large sizes.",neutral
+"The help center has articles on common questions.",neutral
+"The product dimensions are printed on the side of the box.",neutral
+"I chose the annual plan during signup.",neutral
+"The tracking page shows the current delivery stage.",neutral
+"The app is available on both Android and iOS.",neutral
+"The manual is included as a PDF download.",neutral
+"The account dashboard lists my recent orders.",neutral
+"The item was restocked and is available again.",neutral
+"The warranty period is stated as twelve months.",neutral
+"Great value for money, I will definitely buy again.",
+"The new update made the software so much faster, love it.",positive
