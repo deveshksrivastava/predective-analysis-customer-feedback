@@ -195,7 +195,7 @@ stopwords — it didn't; the simple setup stayed best. Honest conclusion: on 149
 
 ## Step 11 — Save & predict
 
-**Goal:** persist the model and use it on new feedback — the payoff.
+**Goal:** persist the model and use it on new feedback — the payoff. [Pickel/joblib]
 
 **What we did:**
 - Saved the tuned pipeline **+ label encoder** to `models/sentiment_model.joblib` (one file; the

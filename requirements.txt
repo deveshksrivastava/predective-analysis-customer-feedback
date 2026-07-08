@@ -8,3 +8,6 @@ jupyter
 
 # Optional extra model
 xgboost
+
+# Testing (dev)
+pytest
