@@ -11,3 +11,9 @@ xgboost
 
 # Testing (dev)
 pytest
+
+# Serving (Phase 1 deployment)
+fastapi
+uvicorn
+gunicorn
+httpx
