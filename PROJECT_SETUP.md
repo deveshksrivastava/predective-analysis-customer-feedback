@@ -3,7 +3,7 @@
 > Living document. We update this as we discuss and make decisions.
 > **Rule: No coding until the user explicitly says "go" for a step.**
 
-_Last updated: 2026-07-06_
+_Last updated: 2026-07-08_
 
 ---
 
@@ -193,6 +193,50 @@ predective-analysis-customer-feedback/
 
 ---
 
+## 4B. Phase 1 deployment — API + Frontend + Azure (PLANNED, awaiting "go")
+
+> Full step-by-step plan (with code, tests, and commands):
+> **`docs/superpowers/plans/2026-07-08-sentiment-api-frontend-azure.md`**
+> Nothing below is implemented yet — coding starts only on explicit "go".
+
+### 4B.1 Goal
+Turn the finished Phase 1 model into a small deployable service: send feedback text to a
+server, get back whether it is **positive** (plus the full sentiment and a confidence
+score), with a minimal web page to try it — deployed to **Azure App Service**.
+
+### 4B.2 Starting point
+The notebook's reusable logic is already refactored into `src/preprocessing.py` and
+`src/model.py` (15 passing tests), so this plan builds on those modules rather than
+re-converting the notebook.
+
+### 4B.3 The four tasks
+1. **`src/train.py`** — script reproducing the notebook's final recipe (tuned Naive Bayes,
+   refit on all 149 rows) → writes `models/sentiment_model.joblib`. Model becomes
+   regenerable anywhere without Jupyter.
+2. **`src/app.py`** — FastAPI server: `GET /health` and `POST /predict`
+   (`{"text": "..."}` → `{"sentiment", "is_positive", "confidence"}`). If the model file
+   is missing (fresh clone / fresh Azure instance) it trains on startup (seconds), so
+   `models/` stays gitignored.
+3. **`static/index.html`** — one plain HTML+JS page served by the same app at `/`:
+   textarea → Analyze → green ✓ POSITIVE / red ✗ NEGATIVE / gray – NEUTRAL with
+   confidence %. No framework, no build step, no CORS.
+4. **Azure** — deploy the single app to App Service (Linux, Python) via `az webapp up`,
+   startup command `gunicorn -k uvicorn.workers.UvicornWorker src.app:app`, documented in
+   `docs/DEPLOYMENT.md`. The live deploy runs together with the user (`az login` needed).
+
+### 4B.4 Key decisions (alternatives in the plan file)
+| Decision | Chosen | Why |
+|----------|--------|-----|
+| Serving framework | **FastAPI** | In the long-term target stack; typed JSON validation; auto `/docs` |
+| Frontend | **Single static HTML+JS page served by FastAPI** | One deployable; React/Streamlit overkill for one form |
+| Model artifact on Azure | **Train on startup if missing** | 149 rows trains in seconds; keeps binary out of git |
+| Azure compute | **App Service via `az webapp up`** | Shortest repo → public URL path for a prototype |
+
+New dependencies: `fastapi`, `uvicorn`, `gunicorn`, `httpx`. Every task is TDD
+(failing test → implement → pass → commit). Out of scope: auth, CI/CD, Docker, Phase 2.
+
+---
+
 ## 5. Phase 2 — Predictive Analysis / Churn (build later)
 
 _Only start after Phase 1 is complete and understood._
@@ -227,6 +271,8 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-07 | Step 10 (tune) | **Done** — `GridSearchCV` (5-fold macro-F1) on Naive Bayes over TF-IDF + `alpha`. Best = unigram + English stopwords, `alpha=0.1` → CV macro-F1 ~**0.74** vs ~0.72 untuned (**+~0.02**, marginal). Tuned pipeline stored as `best_model`, refit on all data. Confirms data — not hyperparameters — is the bottleneck. |
 | 2026-07-07 | Step 11 (save & predict) | **Done** — saved tuned pipeline + label encoder to `models/sentiment_model.joblib` (joblib); reloaded from disk and predicted on 4 new sentences (all sensible, 79–97% confidence). `models/` **gitignored** as a regenerable artifact. **Phase 1 complete** — all "done" criteria met. |
 | 2026-07-07 | Phase 1 sign-off | **Awaiting user sign-off.** Phase 2 (churn) not to start without explicit go. Likely follow-ups: refactor notebook → `src/*.py`; gather more/better data (esp. neutral). |
+| 2026-07-07 | Refactor + tests | **Done** — extracted reusable code to `src/preprocessing.py` (`clean_text`) and `src/model.py` (`build_pipeline`, `save_model`, `load_model`, `predict_sentiment`). Added pytest suite in `tests/` (**15 tests, all passing**). Tests found a real bug: `predict_sentiment([])` errored on empty TF-IDF transform → guarded with an early return. Added `pytest` to `requirements.txt`. |
+| 2026-07-08 | Deployment + frontend plan | **Plan drafted, awaiting "go"** — see §4B and `docs/superpowers/plans/2026-07-08-sentiment-api-frontend-azure.md`. FastAPI API (`/health`, `/predict` with `is_positive` flag) + `src/train.py` + static HTML frontend, one Azure App Service; model self-trains on startup since `models/` is gitignored. No code written yet. |
 
 ---
 
