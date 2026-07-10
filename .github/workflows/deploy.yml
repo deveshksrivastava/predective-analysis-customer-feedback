@@ -1,0 +1,35 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # manual re-deploy button in the Actions tab
+
+env:
+  AZURE_WEBAPP_NAME: feedback-sentiment-api # must match the app created via docs/DEPLOYMENT.md
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package app (only what the server needs)
+        run: zip -r app.zip src static data requirements.txt
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: app.zip

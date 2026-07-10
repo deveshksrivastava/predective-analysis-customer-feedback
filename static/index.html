@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Feedback Sentiment Checker</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; }
+    textarea { width: 100%; min-height: 6rem; font: inherit; padding: .5rem; }
+    button { font: inherit; padding: .5rem 1.5rem; margin-top: .5rem; cursor: pointer; }
+    #result { margin-top: 1.5rem; font-size: 1.5rem; font-weight: bold; }
+    .positive { color: #1a7f37; }
+    .negative { color: #cf222e; }
+    .neutral  { color: #57606a; }
+    .error    { color: #cf222e; font-size: 1rem; font-weight: normal; }
+  </style>
+</head>
+<body>
+  <h1>Feedback Sentiment Checker</h1>
+  <p>Paste customer feedback and check whether it is positive.</p>
+  <textarea id="feedback" placeholder="e.g. The product arrived quickly and works perfectly!"></textarea>
+  <br>
+  <button id="analyze">Analyze</button>
+  <div id="result"></div>
+
+  <script>
+    const result = document.getElementById("result");
+    document.getElementById("analyze").addEventListener("click", async () => {
+      const text = document.getElementById("feedback").value;
+      result.textContent = "Analyzing…";
+      result.className = "";
+      try {
+        const resp = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail?.[0]?.msg || resp.statusText);
+        const data = await resp.json();
+        const pct = (data.confidence * 100).toFixed(0);
+        const mark = data.is_positive ? "✓ POSITIVE" : data.sentiment === "negative" ? "✗ NEGATIVE" : "– NEUTRAL";
+        result.textContent = `${mark} (${pct}% confident)`;
+        result.className = data.sentiment;
+      } catch (err) {
+        result.textContent = `Error: ${err.message}`;
+        result.className = "error";
+      }
+    });
+  </script>
+</body>
+</html>
