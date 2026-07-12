@@ -1,6 +1,6 @@
 # S-001: Add a /version endpoint
 
-Status: In Progress
+Status: Testing
 Branch: story/S-001-version-endpoint
 Requested: add a /version endpoint
 Date: 2026-07-12
@@ -69,6 +69,32 @@ _(coder appends: what was built, decisions made, deviations from the plan)_
 
 _(reviewer appends: Blocker / Suggestion / Nit items with file:line, then the fix outcome)_
 
+- **2026-07-12 (reviewer): APPROVED — no Blockers, Suggestions, or Nits.**
+  - AC1 met: `GET /version` returns 200 (verified with `TestClient`).
+  - AC2 met: single `APP_VERSION = "0.1.0"` constant in `src/app.py`, used in the response.
+  - AC3 met: `model_loaded` via `_state.get("model") is not None`; `True` after lifespan
+    startup, degrades to `false` (no KeyError) if the model were absent.
+  - AC4 met: `model_path` is `DEFAULT_MODEL.name` → `"sentiment_model.joblib"`.
+  - Diff is 11 additive lines confined to `src/app.py`, placed alongside `/health`,
+    defined before the catch-all static mount (not shadowed), and touches nothing on the
+    Out-of-scope list.
+
 ## Test results
 
 _(tester appends: pass/fail per acceptance criterion + full pytest summary)_
+
+- **2026-07-12 (tester):** Added `tests/test_app.py` (new file) with a module-scoped
+  `TestClient` fixture used as a context manager so the `lifespan` trains/loads the model
+  before requests are made. Tests derived from the acceptance criteria wording, not from
+  reading `src/app.py` beforehand.
+
+  | AC | Test(s) | Result |
+  |----|---------|--------|
+  | AC1: `GET /version` returns HTTP 200 | `test_version_returns_200` | PASS |
+  | AC2: `"version"` key is a non-empty string | `test_version_key_is_non_empty_string` | PASS |
+  | AC3: `"model_loaded"` boolean is `true` after lifespan startup | `test_model_loaded_is_true` | PASS |
+  | AC4: `"model_path"` equals `DEFAULT_MODEL.name` | `test_model_path_matches_default_model_name` | PASS |
+
+  Full suite: `19 passed, 12 warnings in 1.90s` (15 pre-existing tests in
+  `tests/test_model.py` and `tests/test_preprocessing.py` + 4 new in `tests/test_app.py`).
+  No implementation findings — all ACs met as coded.
