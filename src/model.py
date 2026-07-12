@@ -9,7 +9,7 @@ from pathlib import Path
 
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
 from .preprocessing import clean_text
@@ -18,12 +18,14 @@ from .preprocessing import clean_text
 def build_pipeline(classifier=None, **tfidf_kwargs) -> Pipeline:
     """TF-IDF -> classifier. Same recipe for every model, so they stay swappable.
 
-    Defaults to the Phase 1 winner (tuned Naive Bayes, unigram + English stopwords).
-    Pass a different ``classifier`` and/or TF-IDF keyword args to compare others.
+    Defaults to the Phase 1 winner on the real 30k-review dataset: Logistic
+    Regression (class_weight="balanced"), unigrams, stopwords KEPT — stripping
+    English stopwords removes negations ("no", "not") and measurably hurts
+    sentiment accuracy. Pass a different ``classifier`` and/or TF-IDF keyword
+    args to compare others.
     """
     if classifier is None:
-        classifier = MultinomialNB(alpha=0.1)
-    tfidf_kwargs.setdefault("stop_words", "english")
+        classifier = LogisticRegression(max_iter=1000, class_weight="balanced")
     return Pipeline([
         ("tfidf", TfidfVectorizer(**tfidf_kwargs)),
         ("clf", classifier),

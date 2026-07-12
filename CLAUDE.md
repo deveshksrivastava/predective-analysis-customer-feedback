@@ -30,9 +30,10 @@ before proposing work, and keep its decision log updated as things change.
 ## Layout
 
 ```
-data/       feedback_sample.csv  (columns: text, sentiment)  — 90 balanced rows
-notebooks/  01_sentiment_prototype.ipynb  — the Phase 1 pipeline
-src/        (later) refactored reusable code
+data/       feedback_reviews.csv (30k real Amazon reviews; training data)
+            feedback_sample.csv  (149-row original learning sample; notebook history)
+notebooks/  01_sentiment_prototype.ipynb  — the Phase 1 pipeline (uses the sample CSV)
+src/        refactored code: preprocessing.py, model.py, train.py, app.py (FastAPI)
 requirements.txt
 PROJECT_SETUP.md   — living plan + decision log (authoritative)
 ```

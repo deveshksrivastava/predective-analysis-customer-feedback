@@ -34,7 +34,7 @@ Then set the startup command (once):
 
 Open `https://feedback-sentiment-api.azurewebsites.net/` for the frontend.
 First request after a deploy may be slow: the app trains the model
-(seconds — the dataset is 149 rows) because `models/` is not shipped.
+(~5 s on the 30k-review dataset) because `models/` is not shipped.
 
 ## Redeploy after changes
 

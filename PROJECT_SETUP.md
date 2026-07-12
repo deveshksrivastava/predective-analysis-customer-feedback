@@ -273,6 +273,7 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-07 | Phase 1 sign-off | **Awaiting user sign-off.** Phase 2 (churn) not to start without explicit go. Likely follow-ups: refactor notebook → `src/*.py`; gather more/better data (esp. neutral). |
 | 2026-07-07 | Refactor + tests | **Done** — extracted reusable code to `src/preprocessing.py` (`clean_text`) and `src/model.py` (`build_pipeline`, `save_model`, `load_model`, `predict_sentiment`). Added pytest suite in `tests/` (**15 tests, all passing**). Tests found a real bug: `predict_sentiment([])` errored on empty TF-IDF transform → guarded with an early return. Added `pytest` to `requirements.txt`. |
 | 2026-07-08 | Deployment + frontend plan | **Plan drafted, awaiting "go"** — see §4B and `docs/superpowers/plans/2026-07-08-sentiment-api-frontend-azure.md`. FastAPI API (`/health`, `/predict` with `is_positive` flag) + `src/train.py` + static HTML frontend, one Azure App Service; model self-trains on startup since `models/` is gitignored. No code written yet. |
+| 2026-07-12 | Real dataset at scale (replaces 149-row sample for training) | **Done** — added `data/feedback_reviews.csv`: 30k real Amazon product reviews (SetFit/amazon_reviews_multi_en, Apache-2.0), balanced 10k/class via star mapping (1–2★ neg / 3★ neu / 4–5★ pos). First attempt used 60k tweet_eval tweets — benchmark OK but **domain shift**: product complaints ("item arrived broken") predicted neutral; discarded in favor of reviews. Re-benchmarked all 4 models on 6k held-out reviews: **LogReg (class_weight=balanced, stopwords KEPT) wins 0.650 macro-F1**; old winner NB now last (0.578). Stripping English stopwords removes negations ("no"/"not") and cost 0.035 F1 → `build_pipeline()` default changed to LogReg + keep stopwords. `train.py` now trains on the reviews CSV (~5 s); 15 tests pass; API verified end-to-end. `feedback_sample.csv` kept as notebook history. |
 | 2026-07-12 | Recruiter-facing README | **Done** — added root `README.md` as the showcase entry point: pitch, live-demo link, architecture diagram, honest CV results (~0.74 macro-F1 tuned NB), lessons learned, quickstart, and a "Roadmap to production" section. Framing decision: present as *end-to-end learning project with production awareness*, not as production-grade. |
 | 2026-07-08 | Deployment implementation | **Done & verified** — `src/train.py`, `src/app.py` (FastAPI `/health` + `/predict` with `is_positive`), `static/index.html` frontend at `/`, serving deps installed, `docs/DEPLOYMENT.md`. Verified live: train CLI regenerates the model, 15 tests pass, positive/negative/blank-422 predictions correct, cold-start self-training works (Azure path), frontend serves 200. **Skipped at user's direction:** new API/train tests (`tests/test_train.py`, `tests/test_app.py`). **Pending:** commits for today's files; actual Azure deploy (`az login` with user). |
 
@@ -295,7 +296,10 @@ CLAUDE.md                     # project guidance loaded into every Claude Code s
 .claude/settings.json         # hooks (team-wide, committed)
 .claude/skills/eda-report/    # custom skill: /eda-report
 .claude/skills/add-model/     # custom skill: /add-model
+.claude/skills/pipeline/      # custom skill: /pipeline (multi-agent orchestrator)
+.claude/agents/               # subagents: story-writer, coder, reviewer, tester
 .mcp.json                     # MCP servers (filesystem, fetch)
+docs/stories/                 # story files produced/consumed by the pipeline
 ```
 
 ### 8.1 CLAUDE.md
@@ -332,3 +336,23 @@ authoritative source; `CLAUDE.md` is the short always-loaded summary.
 | Date | Decision / Question | Outcome |
 |------|--------------------|---------|
 | 2026-07-06 | Claude Code tooling | Added `CLAUDE.md`, 2 skills (`/eda-report`, `/add-model`), 2 hooks (SessionStart context, Python syntax check), 2 MCP servers (filesystem, fetch) |
+| 2026-07-12 | Multi-agent dev pipeline | **Done** — added `/pipeline` skill + 4 subagents (`story-writer`, `coder`, `reviewer`, `tester`) with a user gate after every stage; state handed off via story files in `docs/stories/`. See §8.6. Design doc: `~/.claude/plans/` (approved 2026-07-12). |
+
+### 8.6 Multi-agent pipeline (story → code → review → test)
+
+`/pipeline "<feature request>"` runs a four-stage workflow with a **user-approval gate
+after every stage** (keeps the "don't code until go" agreement):
+
+1. **story-writer** (read-only + Write) drafts `docs/stories/S-###-<slug>.md` — user
+   story + testable acceptance criteria (format: `docs/stories/TEMPLATE.md`) → *gate*
+2. **coder** (full edit, inherits main model) implements it on branch
+   `story/S-###-<slug>` → *gate*
+3. **reviewer** (read-only, cannot edit by construction) checks the diff against the
+   acceptance criteria; blockers go back to the coder, max 2 fix rounds → *gate*
+4. **tester** writes pytest tests **from the acceptance criteria, not the code**
+   (only touches `tests/`), runs the suite → *final gate*, story marked `Done` and
+   logged here.
+
+Design principles: the story file is the only shared state between agents (subagents
+have isolated contexts); tool restrictions enforce roles harder than prompts can; one
+story = one branch = one small unit of work.

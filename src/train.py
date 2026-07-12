@@ -1,8 +1,8 @@
 """Train the Phase 1 sentiment model outside the notebook.
 
-Reproduces notebook Steps 1-11 end state: load the CSV, clean it, fit the
-tuned Naive Bayes pipeline on ALL rows (final refit), and save the bundle
-with joblib so the API can load it.
+Loads the real dataset (30k Amazon product reviews, balanced across
+negative/neutral/positive), cleans it, fits the winning pipeline on ALL rows
+(final refit), and saves the bundle with joblib so the API can load it.
 """
 
 from pathlib import Path
@@ -14,7 +14,7 @@ from .model import build_pipeline, save_model
 from .preprocessing import clean_text
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA = PROJECT_ROOT / "data" / "feedback_sample.csv"
+DEFAULT_DATA = PROJECT_ROOT / "data" / "feedback_reviews.csv"
 DEFAULT_MODEL = PROJECT_ROOT / "models" / "sentiment_model.joblib"
 
 
@@ -27,7 +27,7 @@ def train(data_path=DEFAULT_DATA, model_path=DEFAULT_MODEL) -> Path:
     label_encoder = LabelEncoder()
     labels = label_encoder.fit_transform(df["sentiment"])
 
-    model = build_pipeline()          # tuned NB: unigrams + English stopwords, alpha=0.1
+    model = build_pipeline()          # LogReg (balanced): unigrams, stopwords kept
     model.fit(texts, labels)
 
     return save_model(model, label_encoder, model_path)
