@@ -152,6 +152,51 @@ docs/       phase1_walkthrough.md (step-by-step write-up), DEPLOYMENT.md (Azure 
 .github/    workflows/deploy.yml — test-gated deploy to Azure on push to master
 ```
 
+## Development workflow — multi-agent pipeline
+
+New features are built through a four-agent Claude Code workflow (`/pipeline "<feature request>"`):
+a **story-writer** turns the request into a user story with testable acceptance criteria, a
+**coder** implements it on its own branch, a read-only **reviewer** checks the diff against
+those criteria, and a **tester** writes pytest tests *from the criteria, not the code*. A
+human approval gate sits after every stage, and all agents hand off through a shared story
+file in `docs/stories/` (agents have isolated contexts — the file is the only shared state).
+
+```mermaid
+flowchart TD
+    START(["🧑‍💼 You: /pipeline #quot;feature request#quot;"]) --> SW
+
+    SW["📝 story-writer<br/>user story + testable acceptance criteria"] --> G1{"GATE 1<br/>story approved?"}
+    G1 -- revise --> SW
+    G1 -- yes --> BR["🌿 new branch<br/>story/S-###-slug"]
+
+    BR --> CO["💻 coder<br/>implements story, keeps existing tests green, commits"]
+    CO --> G2{"GATE 2<br/>diff approved?"}
+    G2 -- send back --> CO
+    G2 -- yes --> RV
+
+    RV["🔍 reviewer — read-only, cannot edit code<br/>diff vs acceptance criteria → Blocker / Suggestion / Nit"] --> V{verdict}
+    V -- "NEEDS FIXES<br/>(max 2 rounds)" --> FIX["💻 coder fix round"]
+    FIX --> RV
+    V -- APPROVE --> G3{"GATE 3<br/>review accepted?"}
+
+    G3 -- yes --> TE["🧪 tester<br/>writes pytest tests FROM the acceptance criteria, runs full suite"]
+    TE --> G4{"GATE 4<br/>all green + accepted?"}
+    G4 -- bug found --> CO
+    G4 -- yes --> DONE(["✅ story Done — logged in PROJECT_SETUP.md"])
+
+    SF[("📄 docs/stories/S-###.md<br/>shared story file — the only state agents share")]
+    SW -. writes .-> SF
+    CO -. appends notes .-> SF
+    RV -. findings recorded .-> SF
+    TE -. appends results .-> SF
+```
+
+The agent definitions live in `.claude/agents/` (tool restrictions enforce the roles — the
+reviewer physically has no edit tools) and the orchestrator in `.claude/skills/pipeline/`.
+A plain-language walkthrough is in
+[`docs/learn/multi-agent-pipeline.md`](docs/learn/multi-agent-pipeline.md); design details in
+[`PROJECT_SETUP.md`](PROJECT_SETUP.md) §8.6.
+
 ## Tech stack
 
 Python · pandas · scikit-learn · FastAPI · uvicorn/gunicorn · pytest · joblib ·
