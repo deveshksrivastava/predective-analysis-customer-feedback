@@ -15,6 +15,8 @@ from .model import load_model
 from .preprocessing import clean_text
 from .train import DEFAULT_MODEL, PROJECT_ROOT, train
 
+APP_VERSION = "0.1.0"
+
 _state = {}
 
 
@@ -50,6 +52,15 @@ class PredictionOut(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/version")
+def version():
+    return {
+        "version": APP_VERSION,
+        "model_loaded": _state.get("model") is not None,
+        "model_path": DEFAULT_MODEL.name,
+    }
 
 
 @app.post("/predict", response_model=PredictionOut)
