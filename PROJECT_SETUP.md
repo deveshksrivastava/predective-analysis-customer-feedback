@@ -30,7 +30,7 @@ We build in **two phases, one at a time**:
 | **Phase 1** | **Sentiment analysis** — classify feedback text as positive / negative / neutral | Planned (build first) |
 | **Phase 2** | **Predictive analysis** — predict customer churn | Planned (build after Phase 1) |
 
-```
+<!-- ```
    For a production-ready Phase 1 pipeline, use this stack:
 
    1. pandas – Load and clean review data.
@@ -105,7 +105,7 @@ Classify sentiment into predefined pos/neg/neutral	Supervised
 Discover natural topics/themes in feedback without predefining them (topic modeling, clustering)	Unsupervised
 Predict churn (yes/no) from historical outcomes	Supervised
 Segment customers into behavioral groups without knowing labels first	Unsupervised
-```
+``` -->
 
 ## 3. Working agreement
 
@@ -246,7 +246,7 @@ _Only start after Phase 1 is complete and understood._
 - **Likely models:** Logistic Regression, Random Forest, XGBoost.
 - **Same discipline:** train several models, compare, diagnose, tune.
 - Details to be brainstormed when we get there.
-
+<!-- 
 ---
 
 ## 6. Open questions / decisions log
@@ -273,9 +273,10 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-07 | Phase 1 sign-off | **Awaiting user sign-off.** Phase 2 (churn) not to start without explicit go. Likely follow-ups: refactor notebook → `src/*.py`; gather more/better data (esp. neutral). |
 | 2026-07-07 | Refactor + tests | **Done** — extracted reusable code to `src/preprocessing.py` (`clean_text`) and `src/model.py` (`build_pipeline`, `save_model`, `load_model`, `predict_sentiment`). Added pytest suite in `tests/` (**15 tests, all passing**). Tests found a real bug: `predict_sentiment([])` errored on empty TF-IDF transform → guarded with an early return. Added `pytest` to `requirements.txt`. |
 | 2026-07-08 | Deployment + frontend plan | **Plan drafted, awaiting "go"** — see §4B and `docs/superpowers/plans/2026-07-08-sentiment-api-frontend-azure.md`. FastAPI API (`/health`, `/predict` with `is_positive` flag) + `src/train.py` + static HTML frontend, one Azure App Service; model self-trains on startup since `models/` is gitignored. No code written yet. |
+| 2026-07-12 | Recruiter-facing README | **Done** — added root `README.md` as the showcase entry point: pitch, live-demo link, architecture diagram, honest CV results (~0.74 macro-F1 tuned NB), lessons learned, quickstart, and a "Roadmap to production" section. Framing decision: present as *end-to-end learning project with production awareness*, not as production-grade. |
 | 2026-07-08 | Deployment implementation | **Done & verified** — `src/train.py`, `src/app.py` (FastAPI `/health` + `/predict` with `is_positive`), `static/index.html` frontend at `/`, serving deps installed, `docs/DEPLOYMENT.md`. Verified live: train CLI regenerates the model, 15 tests pass, positive/negative/blank-422 predictions correct, cold-start self-training works (Azure path), frontend serves 200. **Skipped at user's direction:** new API/train tests (`tests/test_train.py`, `tests/test_app.py`). **Pending:** commits for today's files; actual Azure deploy (`az login` with user). |
 
----
+--- -->
 
 ## 7. Next step
 
