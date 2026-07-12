@@ -1,6 +1,6 @@
 # S-001: Add a /version endpoint
 
-Status: Testing
+Status: Done
 Branch: story/S-001-version-endpoint
 Requested: add a /version endpoint
 Date: 2026-07-12
@@ -17,14 +17,14 @@ serving and whether it has a sentiment model loaded, without having to inspect l
 
 <!-- Each criterion must be verifiable by a pytest test or an explicit manual check. -->
 
-- [ ] AC1: `GET /version` returns HTTP 200.
-- [ ] AC2: The JSON response includes a `"version"` key whose value is a non-empty string
+- [x] AC1: `GET /version` returns HTTP 200.
+- [x] AC2: The JSON response includes a `"version"` key whose value is a non-empty string
       (e.g. `"0.1.0"`), sourced from a single version constant defined in `src/app.py`.
-- [ ] AC3: The JSON response includes a `"model_loaded"` boolean key that is `true` when
+- [x] AC3: The JSON response includes a `"model_loaded"` boolean key that is `true` when
       the app has successfully loaded a model during startup (the normal case in tests,
       since the FastAPI `lifespan` trains/loads the model before the app serves
       requests).
-- [ ] AC4: The JSON response includes a `"model_path"` string key equal to the filename
+- [x] AC4: The JSON response includes a `"model_path"` string key equal to the filename
       of the model artifact the app loaded (e.g. `"sentiment_model.joblib"`, matching
       `DEFAULT_MODEL.name` from `src/train.py`).
 

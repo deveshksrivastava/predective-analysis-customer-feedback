@@ -336,6 +336,7 @@ authoritative source; `CLAUDE.md` is the short always-loaded summary.
 | Date | Decision / Question | Outcome |
 |------|--------------------|---------|
 | 2026-07-06 | Claude Code tooling | Added `CLAUDE.md`, 2 skills (`/eda-report`, `/add-model`), 2 hooks (SessionStart context, Python syntax check), 2 MCP servers (filesystem, fetch) |
+| 2026-07-12 | S-001: Add a /version endpoint (first `/pipeline` run) | **Done** — `GET /version` returns `{version, model_loaded, model_path}`; all 4 ACs met, reviewer APPROVED with no findings, 19 tests pass (4 new in `tests/test_app.py`). Branch `story/S-001-version-endpoint`. |
 | 2026-07-12 | Multi-agent dev pipeline | **Done** — added `/pipeline` skill + 4 subagents (`story-writer`, `coder`, `reviewer`, `tester`) with a user gate after every stage; state handed off via story files in `docs/stories/`. See §8.6. Design doc: `~/.claude/plans/` (approved 2026-07-12). |
 
 ### 8.6 Multi-agent pipeline (story → code → review → test)
