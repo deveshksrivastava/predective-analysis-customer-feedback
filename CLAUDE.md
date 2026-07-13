@@ -12,8 +12,8 @@ Two phases, built **one at a time**:
 
 | Phase | Focus | Type | Status |
 |-------|-------|------|--------|
-| **Phase 1** | Sentiment analysis — classify feedback as positive / negative / neutral | Supervised, multi-class classification | In progress (build first) |
-| **Phase 2** | Churn prediction — will a customer churn (yes/no) | Supervised, binary classification | Not started (build after Phase 1) |
+| **Phase 1** | Sentiment analysis — classify feedback as positive / negative / neutral | Supervised, multi-class classification | **Done** |
+| **Phase 2** | Churn prediction — probability a customer churns | Supervised, binary classification (calibrated probability output) | **Done** |
 
 The single source of truth for scope and decisions is **`PROJECT_SETUP.md`** — read it
 before proposing work, and keep its decision log updated as things change.
@@ -30,10 +30,11 @@ before proposing work, and keep its decision log updated as things change.
 ## Layout
 
 ```
-data/       feedback_reviews.csv (30k real Amazon reviews; training data)
+data/       feedback_reviews.csv (30k Amazon reviews → sentiment model)
+            telco_churn.csv (7k IBM Telco customers → churn model)
             feedback_sample.csv  (149-row original learning sample; notebook history)
-notebooks/  01_sentiment_prototype.ipynb  — the Phase 1 pipeline (uses the sample CSV)
-src/        refactored code: preprocessing.py, model.py, train.py, app.py (FastAPI)
+notebooks/  01_sentiment_prototype.ipynb, 02_churn_prototype.ipynb
+src/        preprocessing.py, model.py, train.py (sentiment) · churn.py · app.py (FastAPI)
 requirements.txt
 PROJECT_SETUP.md   — living plan + decision log (authoritative)
 ```

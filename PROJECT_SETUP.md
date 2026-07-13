@@ -28,7 +28,7 @@ We build in **two phases, one at a time**:
 | Phase | Focus | Status |
 |-------|-------|--------|
 | **Phase 1** | **Sentiment analysis** — classify feedback text as positive / negative / neutral | Planned (build first) |
-| **Phase 2** | **Predictive analysis** — predict customer churn | Planned (build after Phase 1) |
+| **Phase 2** | **Predictive analysis** — predict customer churn | **Done** (2026-07-12, see §5) |
 
 <!-- ```
    For a production-ready Phase 1 pipeline, use this stack:
@@ -237,15 +237,26 @@ New dependencies: `fastapi`, `uvicorn`, `gunicorn`, `httpx`. Every task is TDD
 
 ---
 
-## 5. Phase 2 — Predictive Analysis / Churn (build later)
+## 5. Phase 2 — Predictive Analysis / Churn — DONE (2026-07-12)
 
-_Only start after Phase 1 is complete and understood._
+Built after explicit user go (plan approved 2026-07-12; emphasis: predict the
+**probability** of churn, production-style, interview-showcase quality).
 
-- **Goal:** predict whether a customer is likely to **churn**.
-- **Inputs:** structured customer data + signals derived from Phase 1 (e.g. sentiment).
-- **Likely models:** Logistic Regression, Random Forest, XGBoost.
-- **Same discipline:** train several models, compare, diagnose, tune.
-- Details to be brainstormed when we get there.
+- **Data:** IBM Telco Customer Churn (`data/telco_churn.csv`, 7,043 real customers,
+  26.5% churn). Real data over synthetic, consistent with the Phase 1 dataset decision.
+- **Notebook:** `notebooks/02_churn_prototype.ipynb` (11 steps, mirrors Phase 1).
+- **Winner:** sigmoid-**calibrated** Logistic Regression (`class_weight="balanced"`,
+  `C=10`) — ROC-AUC **0.842** on a 1,409-customer held-out split; calibration improved
+  Brier 0.169 → 0.138 without changing the ranking.
+- **Decision threshold 0.10**, derived from a $50-offer vs $500-lost-customer cost sweep
+  (= the cost ratio); saved **inside the model bundle** with the model.
+- **Serving:** `src/churn.py` (train/load/predict, tests in `tests/test_churn.py`),
+  `POST /predict-churn` (typed request → probability + risk band + flag, one JSON log
+  line per prediction), `/version` reports both models, frontend churn form.
+- **Deferred:** XGBoost comparison (needs `libomp` via Homebrew on this Mac — notebook
+  degrades gracefully); sentiment-as-churn-feature (needs real joined data, see README
+  roadmap).
+- **Walkthrough:** `docs/phase2_walkthrough.md`.
 <!-- 
 ---
 
@@ -338,6 +349,7 @@ authoritative source; `CLAUDE.md` is the short always-loaded summary.
 | 2026-07-06 | Claude Code tooling | Added `CLAUDE.md`, 2 skills (`/eda-report`, `/add-model`), 2 hooks (SessionStart context, Python syntax check), 2 MCP servers (filesystem, fetch) |
 | 2026-07-12 | S-001: Add a /version endpoint (first `/pipeline` run) | **Done** — `GET /version` returns `{version, model_loaded, model_path}`; all 4 ACs met, reviewer APPROVED with no findings, 19 tests pass (4 new in `tests/test_app.py`). Branch `story/S-001-version-endpoint`. |
 | 2026-07-12 | Multi-agent dev pipeline | **Done** — added `/pipeline` skill + 4 subagents (`story-writer`, `coder`, `reviewer`, `tester`) with a user gate after every stage; state handed off via story files in `docs/stories/`. See §8.6. Design doc: `~/.claude/plans/` (approved 2026-07-12). |
+| 2026-07-12 | Phase 2 — churn prediction | **Done** — full lifecycle on IBM Telco data (7,043 customers): notebook `02_churn_prototype.ipynb`, calibrated LogReg winner (ROC-AUC 0.842, Brier 0.169→0.138), cost-based threshold 0.10 shipped inside the model bundle, `src/churn.py` + 5 tests, `POST /predict-churn` with per-prediction JSON logging, frontend churn form, `docs/phase2_walkthrough.md`. App version bumped to 0.2.0. Full details: §5. |
 
 ### 8.6 Multi-agent pipeline (story → code → review → test)
 

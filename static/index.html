@@ -3,16 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Feedback Sentiment Checker</title>
+  <title>Customer Feedback &amp; Churn Predictor</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; }
     textarea { width: 100%; min-height: 6rem; font: inherit; padding: .5rem; }
     button { font: inherit; padding: .5rem 1.5rem; margin-top: .5rem; cursor: pointer; }
-    #result { margin-top: 1.5rem; font-size: 1.5rem; font-weight: bold; }
+    #result, #churn-result { margin-top: 1.5rem; font-size: 1.5rem; font-weight: bold; }
     .positive { color: #1a7f37; }
     .negative { color: #cf222e; }
     .neutral  { color: #57606a; }
     .error    { color: #cf222e; font-size: 1rem; font-weight: normal; }
+    .low      { color: #1a7f37; }
+    .medium   { color: #9a6700; }
+    .high     { color: #cf222e; }
+    hr { margin: 3rem 0; border: none; border-top: 1px solid #d0d7de; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .6rem 1rem; }
+    .grid label { display: flex; flex-direction: column; font-size: .85rem; color: #57606a; }
+    .grid select, .grid input { font: inherit; padding: .3rem; margin-top: .15rem; }
+    #churn-note { font-size: .85rem; color: #57606a; margin-top: .5rem; }
   </style>
 </head>
 <body>
@@ -23,7 +31,19 @@
   <button id="analyze">Analyze</button>
   <div id="result"></div>
 
+  <hr>
+
+  <h1>Will this customer churn?</h1>
+  <p>Adjust the customer profile and get the churn probability. Defaults describe a
+     typical high-risk customer — try switching Contract to “Two year” and raising tenure.</p>
+  <div class="grid" id="churn-form"></div>
+  <button id="predict-churn">Predict churn risk</button>
+  <div id="churn-result"></div>
+  <p id="churn-note">Probability comes from a calibrated model; the yes/no call uses a
+     cost-based threshold (0.10), not 0.5 — a missed churner costs ~10× a retention offer.</p>
+
   <script>
+    // ---- Sentiment ----
     const result = document.getElementById("result");
     document.getElementById("analyze").addEventListener("click", async () => {
       const text = document.getElementById("feedback").value;
@@ -44,6 +64,86 @@
       } catch (err) {
         result.textContent = `Error: ${err.message}`;
         result.className = "error";
+      }
+    });
+
+    // ---- Churn ----
+    // Fields mirror the API's CustomerIn model; defaults = a plausible high-risk profile.
+    const FIELDS = {
+      gender: ["Female", "Male"],
+      SeniorCitizen: [0, 1],
+      Partner: ["No", "Yes"],
+      Dependents: ["No", "Yes"],
+      tenure: 2,
+      PhoneService: ["Yes", "No"],
+      MultipleLines: ["No", "Yes", "No phone service"],
+      InternetService: ["Fiber optic", "DSL", "No"],
+      OnlineSecurity: ["No", "Yes", "No internet service"],
+      OnlineBackup: ["No", "Yes", "No internet service"],
+      DeviceProtection: ["No", "Yes", "No internet service"],
+      TechSupport: ["No", "Yes", "No internet service"],
+      StreamingTV: ["Yes", "No", "No internet service"],
+      StreamingMovies: ["Yes", "No", "No internet service"],
+      Contract: ["Month-to-month", "One year", "Two year"],
+      PaperlessBilling: ["Yes", "No"],
+      PaymentMethod: ["Electronic check", "Mailed check",
+                      "Bank transfer (automatic)", "Credit card (automatic)"],
+      MonthlyCharges: 95.0,
+      TotalCharges: 190.0,
+    };
+
+    const form = document.getElementById("churn-form");
+    for (const [name, spec] of Object.entries(FIELDS)) {
+      const label = document.createElement("label");
+      label.textContent = name;
+      let input;
+      if (Array.isArray(spec)) {
+        input = document.createElement("select");
+        for (const v of spec) {
+          const opt = document.createElement("option");
+          opt.value = v;
+          opt.textContent = v;
+          input.appendChild(opt);
+        }
+      } else {
+        input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.step = name === "tenure" ? "1" : "0.05";
+        input.value = spec;
+      }
+      input.id = `f-${name}`;
+      label.appendChild(input);
+      form.appendChild(label);
+    }
+
+    const churnResult = document.getElementById("churn-result");
+    document.getElementById("predict-churn").addEventListener("click", async () => {
+      churnResult.textContent = "Scoring…";
+      churnResult.className = "";
+      const customer = {};
+      for (const [name, spec] of Object.entries(FIELDS)) {
+        const el = document.getElementById(`f-${name}`);
+        customer[name] = Array.isArray(spec)
+          ? (name === "SeniorCitizen" ? Number(el.value) : el.value)
+          : Number(el.value);
+      }
+      try {
+        const resp = await fetch("/predict-churn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(customer),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail?.[0]?.msg || resp.statusText);
+        const data = await resp.json();
+        const pct = (data.churn_probability * 100).toFixed(1);
+        churnResult.textContent =
+          `${pct}% churn risk — ${data.risk_band.toUpperCase()}` +
+          (data.will_churn ? " (flag for retention offer)" : "");
+        churnResult.className = data.risk_band;
+      } catch (err) {
+        churnResult.textContent = `Error: ${err.message}`;
+        churnResult.className = "error";
       }
     });
   </script>
