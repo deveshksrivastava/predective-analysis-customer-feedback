@@ -7,6 +7,12 @@
 
 _Last updated: 2026-07-07_
 
+> **Update 2026-07-12:** this walkthrough describes the original 149-row learning sample.
+> The project has since scaled to **30k real Amazon reviews** (`data/feedback_reviews.csv`),
+> where the model ranking flipped: Logistic Regression (balanced, stopwords kept) now wins
+> with ~0.65 macro-F1 and Naive Bayes comes last. See the README and `PROJECT_SETUP.md`
+> decision log (2026-07-12) for the re-benchmark.
+
 **Problem type:** supervised, multi-class classification — map feedback text → one of
 `positive` / `neutral` / `negative`.
 

@@ -28,9 +28,9 @@ We build in **two phases, one at a time**:
 | Phase | Focus | Status |
 |-------|-------|--------|
 | **Phase 1** | **Sentiment analysis** — classify feedback text as positive / negative / neutral | Planned (build first) |
-| **Phase 2** | **Predictive analysis** — predict customer churn | Planned (build after Phase 1) |
+| **Phase 2** | **Predictive analysis** — predict customer churn | **Done** (2026-07-12, see §5) |
 
-```
+<!-- ```
    For a production-ready Phase 1 pipeline, use this stack:
 
    1. pandas – Load and clean review data.
@@ -105,7 +105,7 @@ Classify sentiment into predefined pos/neg/neutral	Supervised
 Discover natural topics/themes in feedback without predefining them (topic modeling, clustering)	Unsupervised
 Predict churn (yes/no) from historical outcomes	Supervised
 Segment customers into behavioral groups without knowing labels first	Unsupervised
-```
+``` -->
 
 ## 3. Working agreement
 
@@ -237,16 +237,27 @@ New dependencies: `fastapi`, `uvicorn`, `gunicorn`, `httpx`. Every task is TDD
 
 ---
 
-## 5. Phase 2 — Predictive Analysis / Churn (build later)
+## 5. Phase 2 — Predictive Analysis / Churn — DONE (2026-07-12)
 
-_Only start after Phase 1 is complete and understood._
+Built after explicit user go (plan approved 2026-07-12; emphasis: predict the
+**probability** of churn, production-style, interview-showcase quality).
 
-- **Goal:** predict whether a customer is likely to **churn**.
-- **Inputs:** structured customer data + signals derived from Phase 1 (e.g. sentiment).
-- **Likely models:** Logistic Regression, Random Forest, XGBoost.
-- **Same discipline:** train several models, compare, diagnose, tune.
-- Details to be brainstormed when we get there.
-
+- **Data:** IBM Telco Customer Churn (`data/telco_churn.csv`, 7,043 real customers,
+  26.5% churn). Real data over synthetic, consistent with the Phase 1 dataset decision.
+- **Notebook:** `notebooks/02_churn_prototype.ipynb` (11 steps, mirrors Phase 1).
+- **Winner:** sigmoid-**calibrated** Logistic Regression (`class_weight="balanced"`,
+  `C=10`) — ROC-AUC **0.842** on a 1,409-customer held-out split; calibration improved
+  Brier 0.169 → 0.138 without changing the ranking.
+- **Decision threshold 0.10**, derived from a $50-offer vs $500-lost-customer cost sweep
+  (= the cost ratio); saved **inside the model bundle** with the model.
+- **Serving:** `src/churn.py` (train/load/predict, tests in `tests/test_churn.py`),
+  `POST /predict-churn` (typed request → probability + risk band + flag, one JSON log
+  line per prediction), `/version` reports both models, frontend churn form.
+- **Deferred:** XGBoost comparison (needs `libomp` via Homebrew on this Mac — notebook
+  degrades gracefully); sentiment-as-churn-feature (needs real joined data, see README
+  roadmap).
+- **Walkthrough:** `docs/phase2_walkthrough.md`.
+<!-- 
 ---
 
 ## 6. Open questions / decisions log
@@ -273,9 +284,11 @@ _Only start after Phase 1 is complete and understood._
 | 2026-07-07 | Phase 1 sign-off | **Awaiting user sign-off.** Phase 2 (churn) not to start without explicit go. Likely follow-ups: refactor notebook → `src/*.py`; gather more/better data (esp. neutral). |
 | 2026-07-07 | Refactor + tests | **Done** — extracted reusable code to `src/preprocessing.py` (`clean_text`) and `src/model.py` (`build_pipeline`, `save_model`, `load_model`, `predict_sentiment`). Added pytest suite in `tests/` (**15 tests, all passing**). Tests found a real bug: `predict_sentiment([])` errored on empty TF-IDF transform → guarded with an early return. Added `pytest` to `requirements.txt`. |
 | 2026-07-08 | Deployment + frontend plan | **Plan drafted, awaiting "go"** — see §4B and `docs/superpowers/plans/2026-07-08-sentiment-api-frontend-azure.md`. FastAPI API (`/health`, `/predict` with `is_positive` flag) + `src/train.py` + static HTML frontend, one Azure App Service; model self-trains on startup since `models/` is gitignored. No code written yet. |
+| 2026-07-12 | Real dataset at scale (replaces 149-row sample for training) | **Done** — added `data/feedback_reviews.csv`: 30k real Amazon product reviews (SetFit/amazon_reviews_multi_en, Apache-2.0), balanced 10k/class via star mapping (1–2★ neg / 3★ neu / 4–5★ pos). First attempt used 60k tweet_eval tweets — benchmark OK but **domain shift**: product complaints ("item arrived broken") predicted neutral; discarded in favor of reviews. Re-benchmarked all 4 models on 6k held-out reviews: **LogReg (class_weight=balanced, stopwords KEPT) wins 0.650 macro-F1**; old winner NB now last (0.578). Stripping English stopwords removes negations ("no"/"not") and cost 0.035 F1 → `build_pipeline()` default changed to LogReg + keep stopwords. `train.py` now trains on the reviews CSV (~5 s); 15 tests pass; API verified end-to-end. `feedback_sample.csv` kept as notebook history. |
+| 2026-07-12 | Recruiter-facing README | **Done** — added root `README.md` as the showcase entry point: pitch, live-demo link, architecture diagram, honest CV results (~0.74 macro-F1 tuned NB), lessons learned, quickstart, and a "Roadmap to production" section. Framing decision: present as *end-to-end learning project with production awareness*, not as production-grade. |
 | 2026-07-08 | Deployment implementation | **Done & verified** — `src/train.py`, `src/app.py` (FastAPI `/health` + `/predict` with `is_positive`), `static/index.html` frontend at `/`, serving deps installed, `docs/DEPLOYMENT.md`. Verified live: train CLI regenerates the model, 15 tests pass, positive/negative/blank-422 predictions correct, cold-start self-training works (Azure path), frontend serves 200. **Skipped at user's direction:** new API/train tests (`tests/test_train.py`, `tests/test_app.py`). **Pending:** commits for today's files; actual Azure deploy (`az login` with user). |
 
----
+--- -->
 
 ## 7. Next step
 
@@ -294,7 +307,10 @@ CLAUDE.md                     # project guidance loaded into every Claude Code s
 .claude/settings.json         # hooks (team-wide, committed)
 .claude/skills/eda-report/    # custom skill: /eda-report
 .claude/skills/add-model/     # custom skill: /add-model
+.claude/skills/pipeline/      # custom skill: /pipeline (multi-agent orchestrator)
+.claude/agents/               # subagents: story-writer, coder, reviewer, tester
 .mcp.json                     # MCP servers (filesystem, fetch)
+docs/stories/                 # story files produced/consumed by the pipeline
 ```
 
 ### 8.1 CLAUDE.md
@@ -331,3 +347,25 @@ authoritative source; `CLAUDE.md` is the short always-loaded summary.
 | Date | Decision / Question | Outcome |
 |------|--------------------|---------|
 | 2026-07-06 | Claude Code tooling | Added `CLAUDE.md`, 2 skills (`/eda-report`, `/add-model`), 2 hooks (SessionStart context, Python syntax check), 2 MCP servers (filesystem, fetch) |
+| 2026-07-12 | S-001: Add a /version endpoint (first `/pipeline` run) | **Done** — `GET /version` returns `{version, model_loaded, model_path}`; all 4 ACs met, reviewer APPROVED with no findings, 19 tests pass (4 new in `tests/test_app.py`). Branch `story/S-001-version-endpoint`. |
+| 2026-07-12 | Multi-agent dev pipeline | **Done** — added `/pipeline` skill + 4 subagents (`story-writer`, `coder`, `reviewer`, `tester`) with a user gate after every stage; state handed off via story files in `docs/stories/`. See §8.6. Design doc: `~/.claude/plans/` (approved 2026-07-12). |
+| 2026-07-12 | Phase 2 — churn prediction | **Done** — full lifecycle on IBM Telco data (7,043 customers): notebook `02_churn_prototype.ipynb`, calibrated LogReg winner (ROC-AUC 0.842, Brier 0.169→0.138), cost-based threshold 0.10 shipped inside the model bundle, `src/churn.py` + 5 tests, `POST /predict-churn` with per-prediction JSON logging, frontend churn form, `docs/phase2_walkthrough.md`. App version bumped to 0.2.0. Full details: §5. |
+
+### 8.6 Multi-agent pipeline (story → code → review → test)
+
+`/pipeline "<feature request>"` runs a four-stage workflow with a **user-approval gate
+after every stage** (keeps the "don't code until go" agreement):
+
+1. **story-writer** (read-only + Write) drafts `docs/stories/S-###-<slug>.md` — user
+   story + testable acceptance criteria (format: `docs/stories/TEMPLATE.md`) → *gate*
+2. **coder** (full edit, inherits main model) implements it on branch
+   `story/S-###-<slug>` → *gate*
+3. **reviewer** (read-only, cannot edit by construction) checks the diff against the
+   acceptance criteria; blockers go back to the coder, max 2 fix rounds → *gate*
+4. **tester** writes pytest tests **from the acceptance criteria, not the code**
+   (only touches `tests/`), runs the suite → *final gate*, story marked `Done` and
+   logged here.
+
+Design principles: the story file is the only shared state between agents (subagents
+have isolated contexts); tool restrictions enforce roles harder than prompts can; one
+story = one branch = one small unit of work.
